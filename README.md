@@ -120,10 +120,30 @@ You can then choose your option.
 
 ## 5 Real-Life Considerations
 
-If extended for production, this system could be improved by:
+This is a small console app, I tried to think about how real flight booking works. A lot of this comes from my own experience booking flights on different travel sites.
 
-- Storing flights and reservations in a database instead of memory lists.
-- Handling concurrent bookings with transactions/locking to avoid over selling seats.
-- Exposing `FlightService` via REST/GraphQL APIs and building a web or mobile UI on top.
-- Using structured logging and metrics instead of `System.out.println`.
-- Expanding business rules (fare classes, cancellations, maximum seats per booking).
+- **Avoiding overbooking**  
+  When we book flights in real life, we sometimes see messages like “no seats left” or “only 2 seats remaining.” I have also seen cases where flights are overbooked.  
+  Because of that, in `bookFlight` I always check `availableSeats` before creating a reservation and throw an error if someone tries to book more seats than are left.
+
+- **User-friendly search (case-insensitive, trimming)**  
+  When I book tickets online, I don’t always type destinations with perfect casing, like `New York` vs `new york`.  
+  So in `searchFlights`, I made the destination check case-insensitive and I trim spaces. This makes the search a bit more forgiving, similar to real booking websites.
+
+- **Input validation to avoid weird states**  
+  In real systems, bad data usually causes strange bugs later (negative seats, empty names, etc.).  
+  That’s why `Flight`, `Reservation`, and `FlightService` all validate inputs: no blank customer names, no negative         seat counts, no null dates  
+  I prefer to fail fast with a clear message instead of letting bad data go through.
+
+- **Separating logic from the UI**  
+  The console app (`FlightReservationApp`) just handles user input and printing to the screen.  
+  All the actual logic (searching, booking, finding reservations) lives in `FlightService`.  
+  This is similar to how I have built real services at work, keep the core logic separate so it’s easier to test and later plug into a REST API or another UI.
+
+- **Simple but realistic domain model**  
+  I kept `Reservation` immutable (once created, it doesn’t change), and only let `Flight` update the seat count.  
+  This matches how we usually treat bookings in real life: a reservation is basically a record of what was booked, and the change happens on the flight’s seat availability.
+
+These small choices are influenced by how real booking systems behave and by what I have seen as a user on different flight and travel sites, just simplified for this exercise.
+
+
